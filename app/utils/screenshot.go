@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/wieku/danser-go/framework/gl"
 	"github.com/wieku/danser-go/framework/env"
 	"github.com/wieku/danser-go/framework/graphics/texture"
 	"log"

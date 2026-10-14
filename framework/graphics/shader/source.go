@@ -1,7 +1,9 @@
 package shader
 
 import (
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"strings"
+
+	"github.com/wieku/danser-go/framework/gl"
 	"github.com/wieku/danser-go/framework/goroutines"
 )
 
@@ -37,6 +39,10 @@ func NewSource(source string, srcType Type) *Source {
 	src := new(Source)
 	src.srcType = srcType
 
+	if gl.IsGLES {
+		source = toGLES(source)
+	}
+
 	src.handle = gl.CreateShader(uint32(src.srcType))
 
 	srcC, free := gl.Strs(source)
@@ -62,6 +68,17 @@ func NewSource(source string, srcType Type) *Source {
 	}
 
 	return src
+}
+
+// toGLES swaps the desktop "#version 330" header for GLSL ES 3.10 with default precisions.
+func toGLES(source string) string {
+	const header = "#version 310 es\nprecision highp float;\nprecision highp int;\nprecision highp sampler2DArray;\n"
+
+	if rest, ok := strings.CutPrefix(strings.TrimLeft(source, " \t\r\n"), "#version 330"); ok {
+		return header + rest
+	}
+
+	return header + source
 }
 
 func (src *Source) Dispose() {

@@ -2,6 +2,7 @@ package gcontext
 
 import (
 	"reflect"
+	"runtime"
 
 	"github.com/Zyko0/go-sdl3/sdl"
 )
@@ -96,6 +97,10 @@ func HandleEvents() {
 				Name:     kn,
 				Action:   action,
 			})
+		case sdl.EVENT_FINGER_DOWN, sdl.EVENT_FINGER_UP, sdl.EVENT_FINGER_CANCELED:
+			if runtime.GOOS == "android" {
+				touchAsSpace(event.Type == sdl.EVENT_FINGER_DOWN)
+			}
 		case sdl.EVENT_TEXT_INPUT:
 			callListeners(CharEvent{
 				Text: event.TextInputEvent().Text,
@@ -129,4 +134,27 @@ func HandleEvents() {
 			hovered = false
 		}
 	}
+}
+
+// touchAsSpace makes a tap act like the space key on Android, so tapping the screen skips intros and breaks.
+func touchAsSpace(down bool) {
+	kMutex.Lock()
+
+	action := Release
+	if down {
+		action = Press
+	}
+
+	keyMap[sdl.K_SPACE] = down
+
+	kMutex.Unlock()
+
+	name, _ := GetKeyName(sdl.K_SPACE, sdl.SCANCODE_SPACE)
+
+	callListeners(KeyEvent{
+		Key:      sdl.K_SPACE,
+		Scancode: sdl.SCANCODE_SPACE,
+		Name:     name,
+		Action:   action,
+	})
 }

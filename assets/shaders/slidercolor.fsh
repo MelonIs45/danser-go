@@ -7,7 +7,7 @@ precision highp float;
 
 #define maxBorderWidth 1.0f - borderStart
 
-#define slope (maxBorderWidth - baseBorderWidth) / 9
+#define slope (maxBorderWidth - baseBorderWidth) / 9.0
 
 uniform vec4 col_border1;
 uniform vec4 col_border;
@@ -27,15 +27,15 @@ out vec4 color;
 
 void main()
 {
-    float distance = texture(tex, vec3(tex_coord, 0)).r * 2 - 1;
+    float distance = texture(tex, vec3(tex_coord, 0)).r * 2.0 - 1.0;
 
     if (distance >= cutoff) {
         discard;
     }
 
-    float distance_inv = 1 - distance / cutoff;
+    float distance_inv = 1.0 - distance / cutoff;
 
-    gl_FragDepth = 1 - distance_inv * col_border1.a;
+    gl_FragDepth = 1.0 - distance_inv * col_border1.a;
 
     vec4 borderColorOuter = col_border1;
     vec4 borderColorInner = col_border;
@@ -45,10 +45,10 @@ void main()
     vec4 bodyColorInner = col_body;
 
     float borderWidthScaled = borderWidth < 1.0f ? borderWidth * baseBorderWidth : (borderWidth - 1.0f) * slope + baseBorderWidth;
-    float borderMid = borderStart + borderWidthScaled / 2;
+    float borderMid = borderStart + borderWidthScaled / 2.0;
     float borderEnd = borderStart + borderWidthScaled;
 
-    vec4 borderColorMix = mix(borderColorOuter, borderColorInner, smoothstep(borderMid - borderWidthScaled/4, borderMid + borderWidthScaled/4, distance_inv));
+    vec4 borderColorMix = mix(borderColorOuter, borderColorInner, smoothstep(borderMid - borderWidthScaled/4.0, borderMid + borderWidthScaled/4.0, distance_inv));
     vec4 bodyColorMix = mix(bodyColorOuter, bodyColorInner, (distance_inv - borderEnd) / (1.0f - borderEnd));
 
     if (borderWidth < 0.01f) {
@@ -64,7 +64,7 @@ void main()
     }
 
     if (distance_inv > borderStart-blend && distance_inv < borderStart+blend) {
-        color = mix(outerShadow, borderColorMix, (distance_inv - (borderStart - blend)) / (2 * blend));
+        color = mix(outerShadow, borderColorMix, (distance_inv - (borderStart - blend)) / (2.0 * blend));
     }
 
     if (distance_inv > borderStart+blend && distance_inv <= borderEnd-blend) {
@@ -72,7 +72,7 @@ void main()
     }
 
     if (distance_inv > borderEnd-blend && distance_inv < borderEnd+blend) {
-        color = mix(borderColorMix, bodyColorMix, (distance_inv - (borderEnd - blend)) / (2 * blend));
+        color = mix(borderColorMix, bodyColorMix, (distance_inv - (borderEnd - blend)) / (2.0 * blend));
     }
 
     if (distance_inv > borderEnd + blend) {

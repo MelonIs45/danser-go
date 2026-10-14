@@ -23,7 +23,7 @@ out float additive;
 
 void main()
 {
-    vec2 bPos = (base_pos - (in_origin * 2 - 1)) * in_scale;
+    vec2 bPos = (base_pos - (in_origin * 2.0 - 1.0)) * in_scale;
 
     float cs = cos(in_rotation);
     float sn = sin(in_rotation);

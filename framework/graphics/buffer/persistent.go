@@ -6,7 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/Zyko0/go-sdl3/sdl"
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/wieku/danser-go/framework/gl"
 
 	"github.com/wieku/danser-go/framework/goroutines"
 	"github.com/wieku/danser-go/framework/graphics/history"
@@ -23,7 +23,7 @@ type PersistentBufferObject struct {
 }
 
 func NewPersistentBufferObject(maxFloats int) *PersistentBufferObject {
-	if !sdl.GL_ExtensionSupported("GL_ARB_buffer_storage") {
+	if !gl.IsGLES && !sdl.GL_ExtensionSupported("GL_ARB_buffer_storage") {
 		panic("Your GPU does not support one or more required OpenGL extensions: [GL_ARB_buffer_storage]. Please update your graphics drivers or upgrade your GPU.")
 	}
 
@@ -103,6 +103,8 @@ func (vbo *PersistentBufferObject) Unmap(offset, size int) {
 	if vbo.offset+offset+size > vbo.capacity {
 		panic(fmt.Sprintf("Data exceeds VBO's capacity. Data length: %d, Offset: %d, capacity: %d", size, vbo.offset+offset, vbo.capacity))
 	}
+
+	gl.PersistentFlush(vbo.handle, (vbo.offset+offset)*4, size*4)
 
 	vbo.offset += offset + size
 }

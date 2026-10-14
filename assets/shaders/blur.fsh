@@ -33,7 +33,7 @@ void main() {
     for (int i = 2; i < 200; i+=2) {
         float fac = float(i) - 0.5;
 
-        gs = gauss(i, tSigma)*2.0;
+        gs = gauss(float(i), tSigma)*2.0;
         totalGauss += 2.0*gs;
 
         vec2 mv = fac * direction / size;

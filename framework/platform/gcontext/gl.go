@@ -9,7 +9,7 @@ import (
 	"unsafe"
 
 	"github.com/Zyko0/go-sdl3/sdl"
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/wieku/danser-go/framework/gl"
 
 	"github.com/wieku/danser-go/framework/graphics/hacks"
 )
@@ -23,9 +23,11 @@ func GLInit(debugLogs bool, additionalExtensions ...string) error {
 		return err
 	}
 
-	err = extensionCheck(additionalExtensions)
-	if err != nil {
-		return err
+	if !gl.IsGLES { // ES 3.1 lacks these; framework/gl emulates them
+		err = extensionCheck(additionalExtensions)
+		if err != nil {
+			return err
+		}
 	}
 
 	glVendor := C.GoString((*C.char)(unsafe.Pointer(gl.GetString(gl.VENDOR))))
@@ -69,7 +71,7 @@ func GLInit(debugLogs bool, additionalExtensions ...string) error {
 	log.Println("GL Extensions:", extensions)
 	log.Println("OpenGL initialized!")
 
-	if debugLogs {
+	if debugLogs && !gl.IsGLES {
 		gl.Enable(gl.DEBUG_OUTPUT)
 		gl.DebugMessageCallback(func(
 			source uint32,

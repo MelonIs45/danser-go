@@ -55,6 +55,19 @@ func Init(pkgName string) {
 	initialized = true
 }
 
+// InitAt points all danser directories at dir. Used on Android, where the executable path is meaningless.
+func InitAt(dir string) {
+	libDir = dir
+	dataDir = dir
+	configDir = filepath.Join(dir, "settings")
+
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		panic(err)
+	}
+
+	initialized = true
+}
+
 func DataDir() string {
 	if !initialized {
 		panic("Environment not initialized")

@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/Zyko0/go-sdl3/sdl"
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/wieku/danser-go/framework/gl"
 
 	"github.com/wieku/rplpa"
 

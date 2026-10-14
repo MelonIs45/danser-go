@@ -1,7 +1,7 @@
 package video
 
 import (
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/wieku/danser-go/framework/gl"
 	"github.com/wieku/danser-go/framework/graphics/batch"
 	"github.com/wieku/danser-go/framework/graphics/sprite"
 	"github.com/wieku/danser-go/framework/graphics/texture"

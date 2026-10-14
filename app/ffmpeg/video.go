@@ -14,7 +14,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/wieku/danser-go/framework/gl"
 
 	"github.com/wieku/danser-go/app/settings"
 	"github.com/wieku/danser-go/framework/files"

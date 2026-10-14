@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/Zyko0/go-sdl3/sdl"
+	"github.com/wieku/danser-go/framework/gl"
 
 	"github.com/wieku/danser-go/framework/assets"
 	"github.com/wieku/danser-go/framework/env"
@@ -38,7 +39,9 @@ var (
 
 func Initialize(offscreen bool) error {
 	libPath := filepath.Join(env.LibDir(), "SDL3.dll")
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS == "android" {
+		libPath = "libSDL3.so" // already loaded by SDLActivity from the APK
+	} else if runtime.GOOS != "windows" {
 		libPath = filepath.Join(env.LibDir(), "libSDL3.so")
 	}
 
@@ -83,10 +86,16 @@ func SDLCreateWindow(width, height int, title string, props OptionalProps) {
 		log.Fatal(err2)
 	}
 
-	_ = sdl.GL_SetAttribute(sdl.GL_FRAMEBUFFER_SRGB_CAPABLE, 1)
-	_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION, 3)
-	_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 3)
-	_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_PROFILE_MASK, sdl.GL_CONTEXT_PROFILE_CORE)
+	if gl.IsGLES {
+		_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION, 3)
+		_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 1)
+		_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_PROFILE_MASK, sdl.GL_CONTEXT_PROFILE_ES)
+	} else {
+		_ = sdl.GL_SetAttribute(sdl.GL_FRAMEBUFFER_SRGB_CAPABLE, 1)
+		_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION, 3)
+		_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 3)
+		_ = sdl.GL_SetAttribute(sdl.GL_CONTEXT_PROFILE_MASK, sdl.GL_CONTEXT_PROFILE_CORE)
+	}
 
 	if props.BuiltinMSAA {
 		_ = sdl.GL_SetAttribute(sdl.GL_MULTISAMPLEBUFFERS, 1)
@@ -99,6 +108,10 @@ func SDLCreateWindow(width, height int, title string, props OptionalProps) {
 		flags |= sdl.WINDOW_RESIZABLE
 	}
 
+	if runtime.GOOS == "android" {
+		flags |= sdl.WINDOW_FULLSCREEN // immersive mode, so the surface covers the whole display
+	}
+
 	var err error
 	sdlWindow, err = sdl.CreateWindow(title, width, height, sdl.WINDOW_OPENGL|sdl.WINDOW_HIDDEN|flags)
 
@@ -106,7 +119,7 @@ func SDLCreateWindow(width, height int, title string, props OptionalProps) {
 		panic(err)
 	}
 
-	if props.Fullscreen {
+	if props.Fullscreen && runtime.GOOS != "android" { // Android windows are always fullscreen
 		md, err := sdl.GetPrimaryDisplay().CurrentDisplayMode()
 		if err != nil {
 			panic(err)
@@ -132,13 +145,13 @@ func SDLCreateWindow(width, height int, title string, props OptionalProps) {
 		}
 	}
 
-	if !offscreenCtx {
+	if !offscreenCtx && runtime.GOOS != "android" { // on Android this would pop up the on-screen keyboard
 		if err = sdlWindow.StartTextInput(); err != nil {
 			panic(err)
 		}
 	}
 
-	if props.IconName != "" && !offscreenCtx {
+	if props.IconName != "" && !offscreenCtx && runtime.GOOS != "android" {
 		loadIconsSDL(props.IconName)
 	}
 
@@ -166,9 +179,7 @@ func IsFocused() bool {
 }
 
 func Focus() {
-	if err := sdlWindow.Raise(); err != nil {
-		panic(err)
-	}
+	optional(sdlWindow.Raise())
 }
 
 func IsMinimized() bool {
@@ -210,10 +221,7 @@ func SetCursorPosition(x, y float32) {
 		hovered = true
 	}
 
-	err := sdl.WarpMouseGlobal(x+tl.X, y+tl.Y)
-	if err != nil {
-		panic(err)
-	}
+	optional(sdl.WarpMouseGlobal(x+tl.X, y+tl.Y))
 }
 
 func SetWindowCursorPosition(x, y float32) {
@@ -221,9 +229,7 @@ func SetWindowCursorPosition(x, y float32) {
 }
 
 func SetRawInput(on bool) {
-	if err := sdlWindow.SetRelativeMouseMode(on); err != nil {
-		panic(err)
-	}
+	optional(sdlWindow.SetRelativeMouseMode(on))
 }
 
 func SetCursorVisible(visible bool) {
@@ -262,15 +268,11 @@ func GetKeyState(key sdl.Keycode) Action {
 }
 
 func Minimize() {
-	if err := sdlWindow.Minimize(); err != nil {
-		panic(err)
-	}
+	optional(sdlWindow.Minimize())
 }
 
 func Restore() {
-	if err := sdlWindow.Restore(); err != nil {
-		panic(err)
-	}
+	optional(sdlWindow.Restore())
 }
 
 func ShouldClose() bool {
@@ -282,27 +284,19 @@ func SetShouldClose(shouldClose bool) {
 }
 
 func StartProgress() {
-	if err := sdlWindow.SetProgressState(sdl.PROGRESS_STATE_NORMAL); err != nil {
-		panic(err)
-	}
+	optional(sdlWindow.SetProgressState(sdl.PROGRESS_STATE_NORMAL))
 }
 
 func StopProgress() {
-	if err := sdlWindow.SetProgressState(sdl.PROGRESS_STATE_NONE); err != nil {
-		panic(err)
-	}
+	optional(sdlWindow.SetProgressState(sdl.PROGRESS_STATE_NONE))
 }
 
 func ErrorProgress() {
-	if err := sdlWindow.SetProgressState(sdl.PROGRESS_STATE_ERROR); err != nil {
-		panic(err)
-	}
+	optional(sdlWindow.SetProgressState(sdl.PROGRESS_STATE_ERROR))
 }
 
 func SetProgress(value float32) {
-	if err := sdlWindow.SetProgressValue(value); err != nil {
-		panic(err)
-	}
+	optional(sdlWindow.SetProgressValue(value))
 }
 
 func loadIconsSDL(name string) {
@@ -374,11 +368,24 @@ func GetPrimaryVideoMode() sdl.DisplayMode {
 }
 
 func AddToClipboard(text string) {
-	if err := sdl.SetClipboardText(text); err != nil {
-		panic(err)
-	}
+	optional(sdl.SetClipboardText(text))
 }
 
 func IsMainThread() bool {
 	return sdl.IsMainThread()
+}
+
+// optional panics on desktop, but only logs on Android, where SDL doesn't support
+// many window operations (restore, raise, progress bars, ...).
+func optional(err error) {
+	if err == nil {
+		return
+	}
+
+	if runtime.GOOS == "android" {
+		log.Println("SDL:", err)
+		return
+	}
+
+	panic(err)
 }

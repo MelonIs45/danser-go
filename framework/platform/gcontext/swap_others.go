@@ -5,13 +5,10 @@ package gcontext
 import "github.com/Zyko0/go-sdl3/sdl"
 
 func SetSwapInterval(interval int) {
-	if err := sdl.GL_SetSwapInterval(int32(interval)); err != nil {
-		panic(err)
-	}
+	optional(sdl.GL_SetSwapInterval(int32(interval)))
 }
 
 func SwapBuffers() {
-	if err := sdl.GL_SwapWindow(sdlWindow); err != nil {
-		panic(err)
-	}
+	// On Android the surface can disappear (app closed or backgrounded) before the loop notices
+	optional(sdl.GL_SwapWindow(sdlWindow))
 }

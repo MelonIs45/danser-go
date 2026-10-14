@@ -5,7 +5,7 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/wieku/danser-go/framework/gl"
 	"github.com/go-gl/mathgl/mgl32"
 
 	"github.com/wieku/danser-go/framework/goroutines"
@@ -78,6 +78,11 @@ func NewRShader(sources ...*Source) *RShader {
 	s.uniforms = make(map[string]attribute.VertexAttribute)
 
 	s.handle = gl.CreateProgram()
+
+	if gl.IsGLES && !hasFragment(sources) {
+		// Desktop GL links vertex-only programs (used for depth-only passes like slider bodies); ES needs a fragment stage
+		sources = append(sources, emptyFragment())
+	}
 
 	for _, src := range sources {
 		gl.AttachShader(s.handle, src.handle)
@@ -308,4 +313,20 @@ func (s *RShader) Dispose() {
 	}
 
 	s.disposed = true
+}
+
+func hasFragment(sources []*Source) bool {
+	for _, src := range sources {
+		if src.srcType == Fragment {
+			return true
+		}
+	}
+
+	return false
+}
+
+// emptyFragment returns a fragment shader that writes nothing, so only depth is produced.
+// A new one each time, since NewRShader disposes its sources after linking.
+func emptyFragment() *Source {
+	return NewSource("#version 330\nvoid main() {}\n", Fragment)
 }

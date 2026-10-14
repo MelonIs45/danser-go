@@ -10,7 +10,7 @@
 settings.json
 settings-*
 *.db
-danser
+/danser
 danser-launcher
 danser*.exe
 danser*.zip
@@ -21,3 +21,9 @@ danser-core.*
 libdanser*
 api.txt
 *.osr
+
+# Android port
+/android/build/
+/android/skins/
+/third_party/dl/
+/third_party/ex/

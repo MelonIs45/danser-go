@@ -8,7 +8,7 @@ import (
 	color2 "github.com/wieku/danser-go/framework/math/color"
 	"github.com/wieku/danser-go/framework/profiler"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/wieku/danser-go/framework/gl"
 
 	"github.com/wieku/danser-go/framework/graphics/texture"
 )
